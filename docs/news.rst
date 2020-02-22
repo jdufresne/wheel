@@ -1,6 +1,10 @@
 Release Notes
 =============
 
+**UNRELEASED**
+
+- Dropped support for end-of-life Python 2.7
+
 **0.34.2 (2020-01-30)**
 
 - Fixed installation of ``wheel`` from sdist on environments without Unicode
