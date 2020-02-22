@@ -23,7 +23,7 @@ def get_config_var(var):
     try:
         return sysconfig.get_config_var(var)
     except IOError as e:  # pip Issue #1074
-        warnings.warn("{0}".format(e), RuntimeWarning)
+        warnings.warn("{}".format(e), RuntimeWarning)
         return None
 
 
@@ -62,7 +62,7 @@ def get_flag(var, fallback, expected=True, warn=True):
     val = get_config_var(var)
     if val is None:
         if warn:
-            warnings.warn("Config variable '{0}' is unset, Python ABI tag may "
+            warnings.warn("Config variable '{}' is unset, Python ABI tag may "
                           "be incorrect".format(var), RuntimeWarning, 2)
         return fallback()
     return val == expected
