@@ -84,8 +84,6 @@ class WheelFile(ZipFile):
             if eof is None:
                 eof = ef._eof
                 update_crc_orig(newdata)
-            else:  # Python 2
-                update_crc_orig(newdata, eof)
 
             running_hash.update(newdata)
             if eof and running_hash.digest() != expected_hash:
