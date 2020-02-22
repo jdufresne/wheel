@@ -8,10 +8,11 @@ import stat
 import time
 from collections import OrderedDict
 from distutils import log as logger
+from io import StringIO
 from zipfile import ZIP_DEFLATED, ZipInfo, ZipFile
 
 from wheel.cli import WheelError
-from wheel.util import urlsafe_b64decode, as_unicode, native, urlsafe_b64encode, as_bytes, StringIO
+from wheel.util import urlsafe_b64decode, urlsafe_b64encode
 
 # Non-greedy matching of an optional build number may be too clever (more
 # invalid wheel filenames will match). Separate regex for .dist-info?
@@ -88,12 +89,11 @@ class WheelFile(ZipFile):
 
             running_hash.update(newdata)
             if eof and running_hash.digest() != expected_hash:
-                raise WheelError("Hash mismatch for file '{}'".format(native(ef_name)))
+                raise WheelError("Hash mismatch for file '{}'".format(ef_name))
 
-        ef_name = as_unicode(name_or_info.filename if isinstance(name_or_info, ZipInfo)
-                             else name_or_info)
+        ef_name = name_or_info.filename if isinstance(name_or_info, ZipInfo) else name_or_info
         if mode == 'r' and not ef_name.endswith('/') and ef_name not in self._file_hashes:
-            raise WheelError("No hash found for file '{}'".format(native(ef_name)))
+            raise WheelError("No hash found for file '{}'".format(ef_name))
 
         ef = ZipFile.open(self, name_or_info, mode, pwd)
 
@@ -145,7 +145,10 @@ class WheelFile(ZipFile):
         logger.info("adding '%s'", fname)
         if fname != self.record_path:
             hash_ = self._default_algorithm(bytes)
-            self._file_hashes[fname] = hash_.name, native(urlsafe_b64encode(hash_.digest()))
+            self._file_hashes[fname] = (
+                hash_.name,
+                urlsafe_b64encode(hash_.digest()).decode('ascii'),
+            )
             self._file_sizes[fname] = len(bytes)
 
     def close(self):
@@ -162,9 +165,9 @@ class WheelFile(ZipFile):
                 for fname, (algorithm, hash_) in self._file_hashes.items()
             ))
             writer.writerow((format(self.record_path), "", ""))
-            zinfo = ZipInfo(native(self.record_path), date_time=get_zipinfo_datetime())
+            zinfo = ZipInfo(self.record_path, date_time=get_zipinfo_datetime())
             zinfo.compress_type = self.compression
             zinfo.external_attr = 0o664 << 16
-            self.writestr(zinfo, as_bytes(data.getvalue()))
+            self.writestr(zinfo, data.getvalue())
 
         ZipFile.close(self)
